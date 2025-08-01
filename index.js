@@ -1,5 +1,4 @@
-import { property } from "lodash";
-import { Rive, Fit, Alignment, Layout } from "./canvas_single";
+import { Rive, Fit, Alignment, Layout } from "@rive-app/webgl2";
 import { createScene } from "./GamePhysics";
 
 const el = document.getElementById("rive-canvas");
