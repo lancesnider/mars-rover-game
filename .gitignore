@@ -25,6 +25,7 @@ yarn-error.log*
 .rev
 .cache/*
 dist/*
+.parcel-cache/*
 
 # Yarn 3 files
 .pnp.*
