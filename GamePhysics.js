@@ -15,24 +15,28 @@ var HZ = 2.4
 var ZETA = 0.5
 var SPEED = 80.0
 
+// Ground settings
 var groundFD = {
   density: 0.0,
   friction: 0.6,
 }
 
+// Keep track of the last terrain position
+// This is used to create new ground segments
+// that connect to the last segment
 const lastTerrainPosition = { x: 20, y: 0 }
 
-// When an object was created 2 laps ago, we can destroy it
-const destroyOnLap = []
 
 // number of times we make new ground
-var lap = 0
-var segmentsPerLap = 100
-const dx = 5.0
+var lap = 0 // current lap
+const segmentsPerLap = 20 // number of segments per lap
+const dx = 5.0 // distance between segments
 
+// When an object (ground/obstacles) was created 2 laps ago, we can destroy it
+const destroyOnLap = []
 const destroyBodies = (world, bodies) => {
   // destroy all bodies in array
-  console.log('destroying bodies')
+  console.log('destroying lap bodies')
   bodies.forEach((body) => {
     destroyBody(world, body)
   })
@@ -41,14 +45,17 @@ const destroyBodies = (world, bodies) => {
   destroyOnLap.shift()
 }
 
+// Destroy a single body
 const destroyBody = (world, body) => {
   if (world && body) {
     world.destroyBody(body)
   }
 }
 
-const createLap = (world, ground) => {
-  const objectsToDestroy = generateGround(world, ground)
+// Create a new lap and generate new ground
+const createLap = (world) => {
+  console.log('creating new lap')
+  const objectsToDestroy = generateGround(world)
   destroyOnLap.push(objectsToDestroy)
 
   if (destroyOnLap.length > 2) {
@@ -58,12 +65,17 @@ const createLap = (world, ground) => {
   lap += 1
 }
 
-const generateGround = (world, ground) => {
+// Generate ground segments
+const generateGround = (world) => {
   const toDestroy = []
+
+  // Create a new ground body
+  var ground = world.createBody()
 
   var x = lastTerrainPosition.x,
     y1 = lastTerrainPosition.y
 
+  // Create a new ground segments
   for (var i = 0; i < segmentsPerLap; ++i) {
     const y2 = random(-3.0, 2.0)
     ground.createFixture(new Edge(Vec2(x, y1), Vec2(x + dx, y2)), groundFD)
@@ -97,11 +109,14 @@ const generateGround = (world, ground) => {
       toDestroy.push(box)
     }
 
-    if (i === 99) {
+    // If this is the last segment, save the position
+    if (i === segmentsPerLap - 1) {
       lastTerrainPosition.x = x
       lastTerrainPosition.y = y2
     }
   }
+
+  toDestroy.push(ground)
 
   return toDestroy
 }
@@ -113,7 +128,6 @@ const generateCircle = (
   x,
   y
 ) => {
-
   var body = world.createDynamicBody(Vec2(x, y))
 
   var fd = {
@@ -159,21 +173,18 @@ const createScene = () => {
   testbed.width = 30
   testbed.height = 20
 
-  /*
-    Ground
-  */
 
+  // Create the initial ground segment
   var ground = world.createBody()
-
   ground.createFixture(new Edge(Vec2(-20.0, 0.0), Vec2(20.0, 0.0)), groundFD)
 
   createLap(world, ground)
 
   /*
-    Truck
+    TruVehicleck
   */
 
-  // Truck body
+  // Vehicle body
   var car = world.createDynamicBody(Vec2(0.05, 2))
   const carBodyF = car.createFixture(
     new Box(1.5, .5),
@@ -318,11 +329,11 @@ const createScene = () => {
     }
 
     var cp = car.getPosition()
-    testbed.x = -cp.x - 10
+    testbed.x = cp.x + 8
     testbed.y = -cp.y - 3
 
-    if (cp.x > lap * dx * segmentsPerLap - 10) {
-      createLap(world, ground)
+    if (cp.x > lap * dx * segmentsPerLap - 20) {
+      createLap(world)
     }
   }
 

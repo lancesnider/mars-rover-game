@@ -9,6 +9,8 @@ testbed.start(world)
 
 let modelValues = {}
 
+// Set the transforms for the model instance
+// based on the body position and angle
 const setTransforms = (body, modelInstance, bodyX, bodyY) => {
   const postion = body.getPosition()
   modelInstance.x.value = postion.x * 100 - bodyX
@@ -29,7 +31,6 @@ async function main() {
     stateMachines: 'State Machine 1',
     onLoad: () => {
       const instance = r.viewModelInstance
-      console.log(r)
 
       modelValues = instance.properties.reduce((acc, property) => {
         const propName = property.name
@@ -50,6 +51,7 @@ async function main() {
       r.resizeDrawingSurfaceToCanvas();
     },
     onAdvance: () => {
+      // Every time the Rive state machine advances, get the physics body positions
       const bodyPosition = carBodies.body.getPosition()
 
       const offsetX = r.artboardWidth / 5
@@ -63,9 +65,7 @@ async function main() {
       modelValues.body.r.value = -carBodies.body.getAngle()
 
       setTransforms(carBodies.front, modelValues['wheel 3'], bodyX, bodyY)
-
       setTransforms(carBodies.middle, modelValues['wheel 2'], bodyX, bodyY)
-
       setTransforms(carBodies.back, modelValues['wheel 1'], bodyX, bodyY)
     }
   })

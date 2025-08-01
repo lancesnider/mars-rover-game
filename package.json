@@ -14,6 +14,6 @@
   "dependencies": {
     "@rive-app/webgl2": "^2.30.4",
     "lodash": "^4.17.21",
-    "planck": "^1.3.0"
+    "planck": "^1.4.2"
   }
 }
