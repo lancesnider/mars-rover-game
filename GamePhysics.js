@@ -4,12 +4,11 @@ import {
   Vec2,
   Edge,
   Circle,
-  Polygon,
   WheelJoint,
   Box,
 } from 'planck/dist/planck-with-testbed'
 
-import { create, random } from 'lodash'
+import { random } from 'lodash'
 
 // wheel spring settings
 var HZ = 2.4
