@@ -29,7 +29,7 @@ const lastTerrainPosition = { x: 20, y: 0 }
 
 // number of times we make new ground
 var lap = 0 // current lap
-const segmentsPerLap = 20 // number of segments per lap
+const segmentsPerLap = 20 // number of segments per lap. If this changes, you need to update the Rive.
 const dx = 5.0 // distance between segments
 
 // When an object (ground/obstacles) was created 2 laps ago, we can destroy it
@@ -83,31 +83,31 @@ const generateGround = (world) => {
     x += dx
 
     // 1 in 5 chance of generating a circle
-    const randomObstacle = random(0, 10)
-    if (randomObstacle <= 1) {
-      const randomRadus = random(0.3, 1.3)
-      const circle = generateCircle(
-        world,
-        randomRadus,
-        1.0,
-        x + 2.5,
-        Math.max(y1, y2) + randomRadus
-      )
+    // const randomObstacle = random(0, 10)
+    // if (randomObstacle <= 1) {
+    //   const randomRadus = random(0.3, 1.3)
+    //   const circle = generateCircle(
+    //     world,
+    //     randomRadus,
+    //     1.0,
+    //     x + 2.5,
+    //     Math.max(y1, y2) + randomRadus
+    //   )
 
-      toDestroy.push(circle)
-    } else if (randomObstacle == 2) {
-      const randomSize = random(0.3, 1)
-      const box = generateBox(
-        world,
-        randomSize,
-        randomSize,
-        randomSize,
-        x + 2.5,
-        Math.max(y1, y2) + 3
-      )
+    //   toDestroy.push(circle)
+    // } else if (randomObstacle == 2) {
+    //   const randomSize = random(0.3, 1)
+    //   const box = generateBox(
+    //     world,
+    //     randomSize,
+    //     randomSize,
+    //     randomSize,
+    //     x + 2.5,
+    //     Math.max(y1, y2) + 3
+    //   )
 
-      toDestroy.push(box)
-    }
+    //   toDestroy.push(box)
+    // }
 
     // If this is the last segment, save the position
     if (i === segmentsPerLap - 1) {
