@@ -20,7 +20,7 @@ const setTransforms = (body, modelInstance, bodyX, bodyY) => {
 
 async function main() {
   const r = new Rive({
-    src: 'race_car.riv',
+    src: 'race_car_02.riv',
     autoplay: true,
     canvas: el,
     autoBind: true,
@@ -28,9 +28,12 @@ async function main() {
       fit: Fit.Contain,
       alignment: Alignment.Center,
     }),
+    artboard: "MAIN",
     stateMachines: 'State Machine 1',
     onLoad: () => {
       const instance = r.viewModelInstance
+
+      console.log('rive loaded', instance)
 
       modelValues = instance.properties.reduce((acc, property) => {
         const propName = property.name
