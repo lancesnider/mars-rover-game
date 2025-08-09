@@ -25,14 +25,17 @@ var groundFD = {
 // This is used to create new ground segments
 // that connect to the last segment
 const lastTerrainPosition = { x: 20, y: 0 }
+
 const carBodies = {
-  terrain: {}
+  lap: 0,
+  terrain1: {},
+  terrain2: {}
 }
 
 
-// number of times we make new ground
 var lap = 0 // current lap
-const segmentsPerLap = 21 // number of segments per lap. If this changes, you need to update the Rive.
+// number of times we make new ground
+const segmentsPerLap = 20 // number of segments per lap. If this changes, you need to update the Rive.
 const dx = 5.0 // distance between segments
 
 // When an object (ground/obstacles) was created 2 laps ago, we can destroy it
@@ -57,7 +60,7 @@ const destroyBody = (world, body) => {
 // Create a new lap and generate new ground
 const createLap = (world) => {
   console.log('creating new lap')
-  const objectsToDestroy = generateGround(world)
+  const objectsToDestroy = generateGround(world, lap)
   destroyOnLap.push(objectsToDestroy)
 
   if (destroyOnLap.length > 2) {
@@ -65,10 +68,11 @@ const createLap = (world) => {
   }
 
   lap += 1
+  carBodies.lap = lap
 }
 
 // Generate ground segments
-const generateGround = (world) => {
+const generateGround = (world, lap) => {
   const toDestroy = []
 
   // Create a new ground body
@@ -78,7 +82,8 @@ const generateGround = (world) => {
   var x = lastTerrainPosition.x,
   y1 = lastTerrainPosition.y
 
-  carBodies.terrain["x1"] = x
+  const currentTerrain = carBodies[lap % 2 === 0 ? "terrain1" : "terrain2"]
+  currentTerrain["x1"] = x
 
   // Create a new ground segments
   for (var i = 0; i < segmentsPerLap; ++i) {
@@ -86,7 +91,7 @@ const generateGround = (world) => {
     ground.createFixture(new Edge(Vec2(x, y1), Vec2(x + dx, y2)), groundFD)
 
 
-    carBodies.terrain[`y${i + 1}`] = y1
+    currentTerrain[`y${i + 1}`] = y1
 
 
     y1 = y2
@@ -123,6 +128,8 @@ const generateGround = (world) => {
     if (i === segmentsPerLap - 1) {
       lastTerrainPosition.x = x
       lastTerrainPosition.y = y2
+
+      currentTerrain[`y${i + 2}`] = y2
     }
   }
 

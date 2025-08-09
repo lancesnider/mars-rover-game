@@ -19,6 +19,19 @@ const setTransforms = (body, modelInstance, bodyX, bodyY) => {
   modelInstance.r.value = -body.getAngle()
 }
 
+const getTerrainProperties = (instance) => {
+  console.log('propName', instance.properties)
+  return instance.properties.reduce((acc, property) => {
+    const propName = property.name
+
+    return {
+      ...acc,
+      [propName]: instance.number(propName)
+    }
+
+  }, {})
+}
+
 async function main() {
   const r = new Rive({
     src: 'race_car.riv',
@@ -34,12 +47,9 @@ async function main() {
     onLoad: () => {
       const instance = r.viewModelInstance
 
-      const terrain = instance.viewModel("terrain")
-      console.log('terrain', terrain.properties.length)
 
       modelValues = instance.properties.reduce((acc, property) => {
         const propName = property.name
-        const propType = property.type
 
         if (propName === "body" || propName.startsWith("wheel ")) {
           return {
@@ -51,27 +61,14 @@ async function main() {
             }
           }
         }
-
-        const terrainYs = {}
-
-        if (propName === "terrain") {
-          // Each terrain view model property is named "terrain bone y 1"
-          // there are 21 bones, one for each segment
-          for (let i = 0; i < terrain.properties.length; i++) {
-            const terrainName = terrain.properties[i].name
-            const terrainProp = terrain.number(terrainName)
-            terrainYs[terrainName] = terrainProp
-          }
-        }
-
-        return {
-          ...acc,
-          terrain: terrainYs
-      }
       }, {})
 
 
-      console.log('modelValues', modelValues)
+      const terrain1Ys = getTerrainProperties(instance.viewModel("terrain 1"))
+      const terrain2Ys = getTerrainProperties(instance.viewModel("terrain 2"))
+
+      modelValues.terrain = [terrain1Ys, terrain2Ys]
+
       r.resizeDrawingSurfaceToCanvas();
     },
     onAdvance: () => {
@@ -89,14 +86,20 @@ async function main() {
       modelValues.body.r.value = -carBodies.body.getAngle()
 
       // update the terrain x1 and y1 positions
-      modelValues.terrain["terrain bone x 1"].value = carBodies.terrain.x1 * 100 - bodyX
-      // const terrainYi = carBodies.terrain.y1 * -100 - bodyY;
-      // modelValues.terrain["terrain bone y 1"].value = terrainYi;
+      modelValues.terrain[0]["terrain bone x 1"].value = carBodies.terrain1.x1 * 100 - bodyX
+      console.log(carBodies.lap)
+      if (carBodies.lap > 1) {
+        modelValues.terrain[1]["terrain bone x 1"].value = carBodies.terrain2.x1 * 100 - bodyX
+      }
 
       for (let i = 1; i <= 21; i++) {
-        const terrainY = carBodies.terrain[`y${i}`]
+        const terrain1Y = carBodies.terrain1[`y${i}`]
+        modelValues.terrain[0][`terrain bone y ${i}`].value = terrain1Y * -100 - bodyY
 
-        modelValues.terrain[`terrain bone y ${i}`].value = terrainY * -100 - bodyY
+        if (carBodies.lap > 1) {
+          const terrain2Y = carBodies.terrain2[`y${i}`]
+          modelValues.terrain[1][`terrain bone y ${i}`].value = terrain2Y * -100 - bodyY
+        }
       }
 
       setTransforms(carBodies.front, modelValues['wheel 3'], bodyX, bodyY)
