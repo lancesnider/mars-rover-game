@@ -1,5 +1,6 @@
 import { Rive, Fit, Alignment, Layout } from "@rive-app/webgl2";
 import { createScene } from "./GamePhysics";
+import { set } from "lodash";
 
 const el = document.getElementById("rive-canvas");
 
@@ -20,26 +21,27 @@ const setTransforms = (body, modelInstance, bodyX, bodyY) => {
 
 async function main() {
   const r = new Rive({
-    src: 'race_car_02.riv',
+    src: 'race_car.riv',
     autoplay: true,
     canvas: el,
     autoBind: true,
     layout: new Layout({
-      fit: Fit.Contain,
-      alignment: Alignment.Center,
+      fit: Fit.Layout,
+      layoutScaleFactor: .5
     }),
     artboard: "MAIN",
     stateMachines: 'State Machine 1',
     onLoad: () => {
       const instance = r.viewModelInstance
 
-      console.log('rive loaded', instance)
+      const terrain = instance.viewModel("terrain")
+      console.log('terrain', terrain.properties.length)
 
       modelValues = instance.properties.reduce((acc, property) => {
         const propName = property.name
         const propType = property.type
 
-        if (propType === "viewModel") {
+        if (propName === "body" || propName.startsWith("wheel ")) {
           return {
             ...acc,
             [propName]: {
@@ -49,8 +51,27 @@ async function main() {
             }
           }
         }
+
+        const terrainYs = {}
+
+        if (propName === "terrain") {
+          // Each terrain view model property is named "terrain bone y 1"
+          // there are 21 bones, one for each segment
+          for (let i = 0; i < terrain.properties.length; i++) {
+            const terrainName = terrain.properties[i].name
+            const terrainProp = terrain.number(terrainName)
+            terrainYs[terrainName] = terrainProp
+          }
+        }
+
+        return {
+          ...acc,
+          terrain: terrainYs
+      }
       }, {})
 
+
+      console.log('modelValues', modelValues)
       r.resizeDrawingSurfaceToCanvas();
     },
     onAdvance: () => {
@@ -66,6 +87,17 @@ async function main() {
       modelValues.body.x.value = offsetX
       modelValues.body.y.value = offsetY
       modelValues.body.r.value = -carBodies.body.getAngle()
+
+      // update the terrain x1 and y1 positions
+      modelValues.terrain["terrain bone x 1"].value = carBodies.terrain.x1 * 100 - bodyX
+      // const terrainYi = carBodies.terrain.y1 * -100 - bodyY;
+      // modelValues.terrain["terrain bone y 1"].value = terrainYi;
+
+      for (let i = 1; i <= 21; i++) {
+        const terrainY = carBodies.terrain[`y${i}`]
+
+        modelValues.terrain[`terrain bone y ${i}`].value = terrainY * -100 - bodyY
+      }
 
       setTransforms(carBodies.front, modelValues['wheel 3'], bodyX, bodyY)
       setTransforms(carBodies.middle, modelValues['wheel 2'], bodyX, bodyY)

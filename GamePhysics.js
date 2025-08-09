@@ -25,18 +25,20 @@ var groundFD = {
 // This is used to create new ground segments
 // that connect to the last segment
 const lastTerrainPosition = { x: 20, y: 0 }
+const carBodies = {
+  terrain: {}
+}
 
 
 // number of times we make new ground
 var lap = 0 // current lap
-const segmentsPerLap = 20 // number of segments per lap. If this changes, you need to update the Rive.
+const segmentsPerLap = 21 // number of segments per lap. If this changes, you need to update the Rive.
 const dx = 5.0 // distance between segments
 
 // When an object (ground/obstacles) was created 2 laps ago, we can destroy it
 const destroyOnLap = []
 const destroyBodies = (world, bodies) => {
   // destroy all bodies in array
-  console.log('destroying lap bodies')
   bodies.forEach((body) => {
     destroyBody(world, body)
   })
@@ -72,13 +74,21 @@ const generateGround = (world) => {
   // Create a new ground body
   var ground = world.createBody()
 
+
   var x = lastTerrainPosition.x,
-    y1 = lastTerrainPosition.y
+  y1 = lastTerrainPosition.y
+
+  carBodies.terrain["x1"] = x
 
   // Create a new ground segments
   for (var i = 0; i < segmentsPerLap; ++i) {
     const y2 = random(-3.0, 2.0)
     ground.createFixture(new Edge(Vec2(x, y1), Vec2(x + dx, y2)), groundFD)
+
+
+    carBodies.terrain[`y${i + 1}`] = y1
+
+
     y1 = y2
     x += dx
 
@@ -121,44 +131,44 @@ const generateGround = (world) => {
   return toDestroy
 }
 
-const generateCircle = (
-  world,
-  radius,
-  density,
-  x,
-  y
-) => {
-  var body = world.createDynamicBody(Vec2(x, y))
+// const generateCircle = (
+//   world,
+//   radius,
+//   density,
+//   x,
+//   y
+// ) => {
+//   var body = world.createDynamicBody(Vec2(x, y))
 
-  var fd = {
-    density: density,
-    friction: 0.1,
-  }
+//   var fd = {
+//     density: density,
+//     friction: 0.1,
+//   }
 
-  body.createFixture(new Circle(radius), fd)
+//   body.createFixture(new Circle(radius), fd)
 
-  return body
-}
+//   return body
+// }
 
-const generateBox = (
-  world,
-  width,
-  height,
-  density,
-  x,
-  y
-) => {
-  var body = world.createDynamicBody(Vec2(x, y))
+// const generateBox = (
+//   world,
+//   width,
+//   height,
+//   density,
+//   x,
+//   y
+// ) => {
+//   var body = world.createDynamicBody(Vec2(x, y))
 
-  var fd = {
-    density: density,
-    friction: 0.1,
-  }
+//   var fd = {
+//     density: density,
+//     friction: 0.1,
+//   }
 
-  body.createFixture(new Box(width, height), fd)
+//   body.createFixture(new Box(width, height), fd)
 
-  return body
-}
+//   return body
+// }
 
 const createScene = () => {
   let world = new World({
@@ -178,7 +188,7 @@ const createScene = () => {
   var ground = world.createBody()
   ground.createFixture(new Edge(Vec2(-20.0, 0.0), Vec2(20.0, 0.0)), groundFD)
 
-  createLap(world, ground)
+  createLap(world)
 
   /*
     TruVehicleck
@@ -270,14 +280,10 @@ const createScene = () => {
     )
   )
 
-  const carBodies = {
-    back: wheelBack,
-    middle: wheelMiddle,
-    front: wheelFront,
-    body: car,
-    springBack,
-    springMiddle,
-  }
+  carBodies.back = wheelBack
+  carBodies.middle = wheelMiddle
+  carBodies.front = wheelFront
+  carBodies.body = car
 
   /*
     Controls
