@@ -19,6 +19,7 @@ const setTransforms = (body, modelInstance, bodyX, bodyY) => {
   modelInstance.r.value = -body.getAngle()
 }
 
+// Get the terrian properties from the physics
 const getTerrainProperties = (instance) => {
   return instance.properties.reduce((acc, property) => {
     const propName = property.name
