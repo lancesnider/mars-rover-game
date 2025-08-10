@@ -20,7 +20,6 @@ const setTransforms = (body, modelInstance, bodyX, bodyY) => {
 }
 
 const getTerrainProperties = (instance) => {
-  console.log('propName', instance.properties)
   return instance.properties.reduce((acc, property) => {
     const propName = property.name
 
@@ -87,7 +86,6 @@ async function main() {
 
       // update the terrain x1 and y1 positions
       modelValues.terrain[0]["terrain bone x 1"].value = carBodies.terrain1.x1 * 100 - bodyX
-      console.log(carBodies.lap)
       if (carBodies.lap > 1) {
         modelValues.terrain[1]["terrain bone x 1"].value = carBodies.terrain2.x1 * 100 - bodyX
       }

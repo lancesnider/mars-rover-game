@@ -7,12 +7,12 @@ import {
   WheelJoint,
   Box,
 } from 'planck/dist/planck-with-testbed'
+import { createCar } from './utils/Car'
+import { createObstacle } from './utils/Terrain'
 
 import { random } from 'lodash'
 
-// wheel spring settings
-var HZ = 2.4
-var ZETA = 0.5
+
 var SPEED = 80.0
 
 // Ground settings
@@ -24,7 +24,7 @@ var groundFD = {
 // Keep track of the last terrain position
 // This is used to create new ground segments
 // that connect to the last segment
-const lastTerrainPosition = { x: 20, y: 0 }
+const lastTerrainPosition = { x: -10, y: 0 }
 
 const carBodies = {
   lap: 0,
@@ -60,9 +60,10 @@ const destroyBody = (world, body) => {
 // Create a new lap and generate new ground
 const createLap = (world) => {
   console.log('creating new lap')
-  const objectsToDestroy = generateGround(world, lap)
-  destroyOnLap.push(objectsToDestroy)
+  const newGround = generateGround(world, lap)
+  destroyOnLap.push(newGround)
 
+  // Destroy old ground segments
   if (destroyOnLap.length > 2) {
     destroyBodies(world, destroyOnLap[0])
   }
@@ -87,42 +88,19 @@ const generateGround = (world, lap) => {
 
   // Create a new ground segments
   for (var i = 0; i < segmentsPerLap; ++i) {
-    const y2 = random(-3.0, 2.0)
+    // The first 5 segements are flat
+    const y2 = lap === 0 && i < 5 ? -7 : random(-3.0, 2.0)
+
     ground.createFixture(new Edge(Vec2(x, y1), Vec2(x + dx, y2)), groundFD)
 
-
     currentTerrain[`y${i + 1}`] = y1
-
 
     y1 = y2
     x += dx
 
-    // 1 in 5 chance of generating a circle
-    // const randomObstacle = random(0, 10)
-    // if (randomObstacle <= 1) {
-    //   const randomRadus = random(0.3, 1.3)
-    //   const circle = generateCircle(
-    //     world,
-    //     randomRadus,
-    //     1.0,
-    //     x + 2.5,
-    //     Math.max(y1, y2) + randomRadus
-    //   )
-
-    //   toDestroy.push(circle)
-    // } else if (randomObstacle == 2) {
-    //   const randomSize = random(0.3, 1)
-    //   const box = generateBox(
-    //     world,
-    //     randomSize,
-    //     randomSize,
-    //     randomSize,
-    //     x + 2.5,
-    //     Math.max(y1, y2) + 3
-    //   )
-
-    //   toDestroy.push(box)
-    // }
+    // Generate random square and circle obstacles
+    // const obstacle = createObstacle(world, x, y1, y2)
+    // toDestroy.push(obstacle)
 
     // If this is the last segment, save the position
     if (i === segmentsPerLap - 1) {
@@ -138,45 +116,6 @@ const generateGround = (world, lap) => {
   return toDestroy
 }
 
-// const generateCircle = (
-//   world,
-//   radius,
-//   density,
-//   x,
-//   y
-// ) => {
-//   var body = world.createDynamicBody(Vec2(x, y))
-
-//   var fd = {
-//     density: density,
-//     friction: 0.1,
-//   }
-
-//   body.createFixture(new Circle(radius), fd)
-
-//   return body
-// }
-
-// const generateBox = (
-//   world,
-//   width,
-//   height,
-//   density,
-//   x,
-//   y
-// ) => {
-//   var body = world.createDynamicBody(Vec2(x, y))
-
-//   var fd = {
-//     density: density,
-//     friction: 0.1,
-//   }
-
-//   body.createFixture(new Box(width, height), fd)
-
-//   return body
-// }
-
 const createScene = () => {
   let world = new World({
     gravity: new Vec2(0.0, -10.0),
@@ -190,102 +129,21 @@ const createScene = () => {
   testbed.width = 30
   testbed.height = 20
 
-
-  // Create the initial ground segment
-  var ground = world.createBody()
-  ground.createFixture(new Edge(Vec2(-20.0, 0.0), Vec2(20.0, 0.0)), groundFD)
-
   createLap(world)
 
   /*
-    TruVehicleck
+    Vehicle
   */
 
-  // Vehicle body
-  var car = world.createDynamicBody(Vec2(0.05, 2))
-  const carBodyF = car.createFixture(
-    new Box(1.5, .5),
-    1.0
-  )
-
-  car.createFixture(
-    Box(0.8, 0.5, Vec2(-1.4, 0.35), -.5),
-    .5
-  );
-
-  car.createFixture(
-    Box(0.3, 0.3, Vec2(1.2, 2)),
-    1.0
-  );
-
-  car.createFixture(
-    Box(.5, .7, Vec2(2.1, .3)),
-    .5
-  );
-
-  // Add wheels
-  var wheelFD = {
-    density: 1.0,
-    friction: 0.9,
-  }
-
-  var wheelBack = world.createDynamicBody(Vec2(-1.75, 0.5))
-  const wheelBackF = wheelBack.createFixture(new Circle(0.6), wheelFD)
-
-  var wheelMiddle = world.createDynamicBody(Vec2(0, 0.5))
-  const wheelMiddleF = wheelMiddle.createFixture(new Circle(0.6), wheelFD)
-
-  var wheelFront = world.createDynamicBody(Vec2(1.75, 0.5))
-  const wheelFrontF = wheelFront.createFixture(new Circle(0.6), wheelFD)
-
-  // Add shocks
-  var springBack = world.createJoint(
-    new WheelJoint(
-      {
-        motorSpeed: 0.0,
-        maxMotorTorque: 20.0,
-        enableMotor: true,
-        frequencyHz: HZ,
-        dampingRatio: ZETA,
-      },
-      car,
-      wheelBack,
-      wheelBack.getPosition(),
-      Vec2(0.0, 1.0)
-    )
-  )
-
-  var springMiddle = world.createJoint(
-    new WheelJoint(
-      {
-        motorSpeed: 0.0,
-        maxMotorTorque: 20.0,
-        enableMotor: false,
-        frequencyHz: HZ,
-        dampingRatio: ZETA,
-      },
-      car,
-      wheelMiddle,
-      wheelMiddle.getPosition(),
-      Vec2(0.0, 1.0)
-    )
-  )
-
-  var springFront = world.createJoint(
-    new WheelJoint(
-      {
-        motorSpeed: 0.0,
-        maxMotorTorque: 20.0,
-        enableMotor: false,
-        frequencyHz: HZ,
-        dampingRatio: ZETA,
-      },
-      car,
-      wheelFront,
-      wheelFront.getPosition(),
-      Vec2(0.0, 1.0)
-    )
-  )
+  const {
+    wheelBack,
+    wheelMiddle,
+    wheelFront,
+    car,
+    springBack,
+    springMiddle,
+    springFront
+  } = createCar(world)
 
   carBodies.back = wheelBack
   carBodies.middle = wheelMiddle
@@ -345,7 +203,7 @@ const createScene = () => {
     testbed.x = cp.x + 8
     testbed.y = -cp.y - 3
 
-    if (cp.x > lap * dx * segmentsPerLap - 20) {
+    if (cp.x > lap * dx * segmentsPerLap - 50) {
       createLap(world)
     }
   }
