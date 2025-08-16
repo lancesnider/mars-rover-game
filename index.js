@@ -1,6 +1,5 @@
-import { Rive, Fit, Alignment, Layout } from "@rive-app/webgl2";
+import { Rive, Fit, Layout } from "@rive-app/webgl2";
 import { createScene } from "./GamePhysics";
-import { set } from "lodash";
 
 const el = document.getElementById("rive-canvas");
 
@@ -19,7 +18,7 @@ const setTransforms = (body, modelInstance, bodyX, bodyY) => {
   modelInstance.r.value = -body.getAngle()
 }
 
-// Get the terrian properties from the physics
+// Get the terrian properties from the physics simulator
 const getTerrainProperties = (instance) => {
   return instance.properties.reduce((acc, property) => {
     const propName = property.name
@@ -40,7 +39,7 @@ async function main() {
     autoBind: true,
     layout: new Layout({
       fit: Fit.Layout,
-      layoutScaleFactor: .5
+      layoutScaleFactor: .6
     }),
     artboard: "MAIN",
     stateMachines: 'State Machine 1',

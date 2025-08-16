@@ -3,12 +3,9 @@ import {
   Testbed,
   Vec2,
   Edge,
-  Circle,
-  WheelJoint,
-  Box,
 } from 'planck/dist/planck-with-testbed'
 import { createCar } from './utils/Car'
-import { createObstacle } from './utils/Terrain'
+// import { createObstacle } from './utils/Terrain'
 
 import { random } from 'lodash'
 
@@ -89,7 +86,7 @@ const generateGround = (world, lap) => {
   // Create a new ground segments
   for (var i = 0; i < segmentsPerLap; ++i) {
     // The first 5 segements are flat
-    const y2 = lap === 0 && i < 5 ? -7 : random(-3.0, 2.0)
+    const y2 = lap === 0 && i < 3 ? -2 : random(-3.0, 2.0)
 
     ground.createFixture(new Edge(Vec2(x, y1), Vec2(x + dx, y2)), groundFD)
 
@@ -122,12 +119,12 @@ const createScene = () => {
   })
 
   const testbed = Testbed.mount()
-  testbed.x = 0
-  testbed.y = 0
-  testbed.ratio = 40
-  // Viewbox size
-  testbed.width = 30
-  testbed.height = 20
+  // Testbed camera and view settings
+  testbed.x = 15
+  // testbed.y = 0
+  // testbed.ratio = 40
+  // testbed.width = 30
+  // testbed.height = 20
 
   createLap(world)
 
@@ -200,8 +197,9 @@ const createScene = () => {
     }
 
     var cp = car.getPosition()
-    testbed.x = cp.x + 8
-    testbed.y = -cp.y - 3
+    // Follow camera
+    // testbed.x = cp.x + 8
+    // testbed.y = -cp.y - 3
 
     if (cp.x > lap * dx * segmentsPerLap - 50) {
       createLap(world)
