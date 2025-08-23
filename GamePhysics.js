@@ -1,9 +1,8 @@
 import {
   World,
-  Testbed,
   Vec2,
   Edge,
-} from 'planck/dist/planck-with-testbed'
+} from 'planck'
 import { createCar } from './utils/Car'
 // import { createObstacle } from './utils/Terrain'
 
@@ -118,14 +117,6 @@ const createScene = () => {
     gravity: new Vec2(0.0, -10.0),
   })
 
-  const testbed = Testbed.mount()
-  // Testbed camera and view settings
-  testbed.x = 15
-  // testbed.y = 0
-  // testbed.ratio = 40
-  // testbed.width = 30
-  // testbed.height = 20
-
   createLap(world)
 
   /*
@@ -150,26 +141,64 @@ const createScene = () => {
   /*
     Controls
   */
+  // track which keys are currently down
+  const activeKeys = {};
+  const downKeys = {};
+  function updateActiveKeys(keyCode, down) {
+    const char = String.fromCharCode(keyCode);
+    if (/\w/.test(char)) {
+      activeKeys[char] = down;
+    }
+    activeKeys.right = downKeys[39] || activeKeys["D"];
+    activeKeys.left = downKeys[37] || activeKeys["A"];
+    activeKeys.up = downKeys[38] || activeKeys["W"];
+    activeKeys.down = downKeys[40] || activeKeys["S"];
+  }
 
-  testbed.step = function () {
-    if (!springBack || !springFront || !springMiddle) return
+  window.addEventListener("keydown", function (e) {
+    const keyCode = e.keyCode;
+    downKeys[keyCode] = true;
+    updateActiveKeys(keyCode, true);
+  });
+  window.addEventListener("keyup", function (e) {
+    const keyCode = e.keyCode;
+    downKeys[keyCode] = false;
+    updateActiveKeys(keyCode, false);
+  });
 
-    if (testbed.activeKeys.left) {
+  /*
+    Fixed time step
+  */
+
+  const FIXED_STEP = 1 / 60; // 60 Hz
+  const MAX_DT = 0.05; // clamp big frame gaps (50 ms)
+  const VEL_ITERS = 8;
+  const POS_ITERS = 3;
+
+  let last = performance.now();
+  let acc = 0;
+
+  function tick(now) {
+    // seconds since last frame, clamped
+    let dt = (now - last) / 1000;
+    if (dt > MAX_DT) dt = MAX_DT;
+    last = now;
+
+    acc += dt;
+    while (acc >= FIXED_STEP) {
+      world.step(FIXED_STEP, VEL_ITERS, POS_ITERS);
+      acc -= FIXED_STEP;
+    }
+
+     if (activeKeys.left) {
       // Apply torque for left turn (counter-clockwise)
       car.applyTorque(100, true)
-    } else if (testbed.activeKeys.right) {
+    } else if (activeKeys.right) {
       // Apply torque for right turn (clockwise)
       car.applyTorque(-100, true)
     }
 
-    if (testbed.activeKeys.up && testbed.activeKeys.down) {
-      springBack.setMotorSpeed(0)
-      springBack.enableMotor(false)
-      springMiddle.setMotorSpeed(0)
-      springMiddle.enableMotor(false)
-      springFront.setMotorSpeed(0)
-      springFront.enableMotor(false)
-    } else if (testbed.activeKeys.up) {
+   if (activeKeys.up) {
       const speed = -SPEED
 
       springBack.setMotorSpeed(speed)
@@ -178,7 +207,7 @@ const createScene = () => {
       springMiddle.enableMotor(true)
       springFront.setMotorSpeed(speed)
       springFront.enableMotor(true)
-    } else if (testbed.activeKeys.down) {
+    } else if (activeKeys.down) {
       const speed = +SPEED
 
       springBack.setMotorSpeed(speed)
@@ -197,16 +226,15 @@ const createScene = () => {
     }
 
     var cp = car.getPosition()
-    // Follow camera
-    // testbed.x = cp.x + 8
-    // testbed.y = -cp.y - 3
-
-    if (cp.x > lap * dx * segmentsPerLap - 50) {
+     if (cp.x > lap * dx * segmentsPerLap - 50) {
       createLap(world)
     }
-  }
 
-  return { world, testbed, carBodies }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  return { carBodies }
 }
 
 export { createScene }

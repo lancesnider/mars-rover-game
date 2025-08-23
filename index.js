@@ -3,9 +3,7 @@ import { createScene } from "./GamePhysics";
 
 const el = document.getElementById("rive-canvas");
 
-const { testbed, world, carBodies } = createScene()
-
-testbed.start(world)
+const { carBodies } = createScene()
 
 let modelValues = {}
 
