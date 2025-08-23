@@ -16,5 +16,8 @@
     "@rive-app/webgl2": "^2.30.4",
     "lodash": "^4.17.21",
     "planck": "^1.4.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }

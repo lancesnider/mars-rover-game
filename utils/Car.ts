@@ -1,14 +1,9 @@
-import {
-  Vec2,
-  Circle,
-  WheelJoint,
-  Box,
-} from 'planck/dist/planck-with-testbed'
+import { Vec2, Circle, WheelJoint, Box, Body } from 'planck'
 
 // wheel spring settings
-var HZ = 2.4
-var ZETA = 0.5
-var wheelFD = {
+const HZ = 2.4
+const ZETA = 0.5
+const wheelFD = {
   density: 1.0,
   friction: 0.9,
 }
@@ -19,29 +14,17 @@ const createCar = (world) => {
     Car Body
   */
 
-  var car = world.createDynamicBody(Vec2(0.05, 2))
+  const car = world.createDynamicBody(Vec2(0.05, 2))
 
   // The vehicle body is made up of 4 box fixtures
   // Main body
-  car.createFixture(
-    new Box(1.5, .5),
-    1.0
-  )
+  car.createFixture(new Box(1.5, 0.5), 1.0)
   // Motor (in the back)
-  car.createFixture(
-    Box(0.8, 0.5, Vec2(-1.4, 0.35), -.5),
-    .5
-  );
+  car.createFixture(Box(0.8, 0.5, Vec2(-1.4, 0.35), -0.5), 0.5)
   // Head
-  car.createFixture(
-    Box(0.3, 0.3, Vec2(1.2, 2)),
-    1.0
-  );
+  car.createFixture(Box(0.3, 0.3, Vec2(1.2, 2)), 1.0)
   // Grabber arm
-  car.createFixture(
-    Box(.5, .7, Vec2(2.1, .3)),
-    .5
-  );
+  car.createFixture(Box(0.5, 0.7, Vec2(2.1, 0.3)), 0.5)
 
   /*
     Wheels
@@ -60,7 +43,7 @@ const createCar = (world) => {
     Shocks
   */
 
-  var springBack = world.createJoint(
+  const springBack = world.createJoint(
     new WheelJoint(
       {
         motorSpeed: 0.0,
@@ -76,7 +59,7 @@ const createCar = (world) => {
     )
   )
 
-  var springMiddle = world.createJoint(
+  const springMiddle = world.createJoint(
     new WheelJoint(
       {
         motorSpeed: 0.0,
@@ -92,7 +75,7 @@ const createCar = (world) => {
     )
   )
 
-  var springFront = world.createJoint(
+  const springFront = world.createJoint(
     new WheelJoint(
       {
         motorSpeed: 0.0,
@@ -115,7 +98,7 @@ const createCar = (world) => {
     car,
     springBack,
     springMiddle,
-    springFront
+    springFront,
   }
 }
 

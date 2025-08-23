@@ -1,13 +1,10 @@
-import {
-  World,
-  Vec2,
-  Edge,
-} from 'planck'
+import { World, Vec2, Edge, Body, Fixture } from 'planck'
 import { createCar } from './utils/Car'
 // import { createObstacle } from './utils/Terrain'
 
 import { random } from 'lodash'
 
+type Destroyable = Body | Fixture
 
 var SPEED = 80.0
 
@@ -22,12 +19,31 @@ var groundFD = {
 // that connect to the last segment
 const lastTerrainPosition = { x: -10, y: 0 }
 
-const carBodies = {
-  lap: 0,
-  terrain1: {},
-  terrain2: {}
+type ActiveKeys = {
+  [key: string]: boolean
 }
 
+type TerrainValues = { [key: string]: number }[]
+
+interface CarBodies {
+  lap: number
+  terrain1: TerrainValues
+  terrain2: TerrainValues
+  back: Body | null
+  middle: Body | null
+  front: Body | null
+  body: Body | null
+}
+
+const carBodies: CarBodies = {
+  lap: 0,
+  terrain1: [],
+  terrain2: [],
+  back: null,
+  middle: null,
+  front: null,
+  body: null,
+}
 
 var lap = 0 // current lap
 // number of times we make new ground
@@ -35,7 +51,7 @@ const segmentsPerLap = 20 // number of segments per lap. If this changes, you ne
 const dx = 5.0 // distance between segments
 
 // When an object (ground/obstacles) was created 2 laps ago, we can destroy it
-const destroyOnLap = []
+const destroyOnLap: Destroyable[][] = []
 const destroyBodies = (world, bodies) => {
   // destroy all bodies in array
   bodies.forEach((body) => {
@@ -70,17 +86,16 @@ const createLap = (world) => {
 
 // Generate ground segments
 const generateGround = (world, lap) => {
-  const toDestroy = []
+  const toDestroy: Destroyable[] = []
 
   // Create a new ground body
-  var ground = world.createBody()
-
+  const ground: Body = world.createBody()
 
   var x = lastTerrainPosition.x,
-  y1 = lastTerrainPosition.y
+    y1 = lastTerrainPosition.y
 
-  const currentTerrain = carBodies[lap % 2 === 0 ? "terrain1" : "terrain2"]
-  currentTerrain["x1"] = x
+  const currentTerrain = carBodies[lap % 2 === 0 ? 'terrain1' : 'terrain2']
+  currentTerrain['x1'] = x
 
   // Create a new ground segments
   for (var i = 0; i < segmentsPerLap; ++i) {
@@ -130,7 +145,7 @@ const createScene = () => {
     car,
     springBack,
     springMiddle,
-    springFront
+    springFront,
   } = createCar(world)
 
   carBodies.back = wheelBack
@@ -142,55 +157,56 @@ const createScene = () => {
     Controls
   */
   // track which keys are currently down
-  const activeKeys = {};
-  const downKeys = {};
+
+  const activeKeys: ActiveKeys = {}
+  const downKeys: ActiveKeys = {}
   function updateActiveKeys(keyCode, down) {
-    const char = String.fromCharCode(keyCode);
+    const char = String.fromCharCode(keyCode)
     if (/\w/.test(char)) {
-      activeKeys[char] = down;
+      activeKeys[char] = down
     }
-    activeKeys.right = downKeys[39] || activeKeys["D"];
-    activeKeys.left = downKeys[37] || activeKeys["A"];
-    activeKeys.up = downKeys[38] || activeKeys["W"];
-    activeKeys.down = downKeys[40] || activeKeys["S"];
+    activeKeys.right = downKeys[39] || activeKeys['D']
+    activeKeys.left = downKeys[37] || activeKeys['A']
+    activeKeys.up = downKeys[38] || activeKeys['W']
+    activeKeys.down = downKeys[40] || activeKeys['S']
   }
 
-  window.addEventListener("keydown", function (e) {
-    const keyCode = e.keyCode;
-    downKeys[keyCode] = true;
-    updateActiveKeys(keyCode, true);
-  });
-  window.addEventListener("keyup", function (e) {
-    const keyCode = e.keyCode;
-    downKeys[keyCode] = false;
-    updateActiveKeys(keyCode, false);
-  });
+  window.addEventListener('keydown', function (e) {
+    const keyCode = e.keyCode
+    downKeys[keyCode] = true
+    updateActiveKeys(keyCode, true)
+  })
+  window.addEventListener('keyup', function (e) {
+    const keyCode = e.keyCode
+    downKeys[keyCode] = false
+    updateActiveKeys(keyCode, false)
+  })
 
   /*
     Fixed time step
   */
 
-  const FIXED_STEP = 1 / 60; // 60 Hz
-  const MAX_DT = 0.05; // clamp big frame gaps (50 ms)
-  const VEL_ITERS = 8;
-  const POS_ITERS = 3;
+  const FIXED_STEP = 1 / 60 // 60 Hz
+  const MAX_DT = 0.05 // clamp big frame gaps (50 ms)
+  const VEL_ITERS = 8
+  const POS_ITERS = 3
 
-  let last = performance.now();
-  let acc = 0;
+  let last = performance.now()
+  let acc = 0
 
   function tick(now) {
     // seconds since last frame, clamped
-    let dt = (now - last) / 1000;
-    if (dt > MAX_DT) dt = MAX_DT;
-    last = now;
+    let dt = (now - last) / 1000
+    if (dt > MAX_DT) dt = MAX_DT
+    last = now
 
-    acc += dt;
+    acc += dt
     while (acc >= FIXED_STEP) {
-      world.step(FIXED_STEP, VEL_ITERS, POS_ITERS);
-      acc -= FIXED_STEP;
+      world.step(FIXED_STEP, VEL_ITERS, POS_ITERS)
+      acc -= FIXED_STEP
     }
 
-     if (activeKeys.left) {
+    if (activeKeys.left) {
       // Apply torque for left turn (counter-clockwise)
       car.applyTorque(100, true)
     } else if (activeKeys.right) {
@@ -198,7 +214,7 @@ const createScene = () => {
       car.applyTorque(-100, true)
     }
 
-   if (activeKeys.up) {
+    if (activeKeys.up) {
       const speed = -SPEED
 
       springBack.setMotorSpeed(speed)
@@ -226,13 +242,13 @@ const createScene = () => {
     }
 
     var cp = car.getPosition()
-     if (cp.x > lap * dx * segmentsPerLap - 50) {
+    if (cp.x > lap * dx * segmentsPerLap - 50) {
       createLap(world)
     }
 
-    requestAnimationFrame(tick);
+    requestAnimationFrame(tick)
   }
-  requestAnimationFrame(tick);
+  requestAnimationFrame(tick)
 
   return { carBodies }
 }

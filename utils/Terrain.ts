@@ -1,18 +1,8 @@
-import {
-  Vec2,
-  Circle,
-  Box,
-} from 'planck/dist/planck-with-testbed'
+import { Vec2, Circle, Box } from 'planck'
 
 import { random } from 'lodash'
 
-const generateCircle = (
-  world,
-  radius,
-  density,
-  x,
-  y
-) => {
+const generateCircle = (world, radius, density, x, y) => {
   var body = world.createDynamicBody(Vec2(x, y))
 
   var fd = {
@@ -25,14 +15,7 @@ const generateCircle = (
   return body
 }
 
-const generateBox = (
-  world,
-  width,
-  height,
-  density,
-  x,
-  y
-) => {
+const generateBox = (world, width, height, density, x, y) => {
   var body = world.createDynamicBody(Vec2(x, y))
 
   var fd = {
